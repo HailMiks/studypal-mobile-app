@@ -22,7 +22,7 @@ const WelcomeScreen = () => {
           <TouchableOpacity
             onPress={() => navigation.navigate('SignUp')}
             style={styles.button}>
-            <Text style={styles.buttonText}>Sign Up</Text>
+            <Text style={styles.buttonText}>SIGN UP</Text>
           </TouchableOpacity>
           <View style={styles.loginContainer}>
             <Text style={styles.text}>Already have an account?</Text>
@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
   title: {
     color: 'white',
     fontWeight: 'bold',
-    fontSize: 24,
+    fontSize: 25,
     textAlign: 'center',
   },
   imageContainer: {
@@ -61,16 +61,21 @@ const styles = StyleSheet.create({
     height: 350,
   },
   buttonContainer: {
-    marginVertical: 4,
+    marginVertical: 10, 
   },
   button: {
-    paddingVertical: 12,
-    backgroundColor: '#FFD700',
-    marginHorizontal: 7,
-    borderRadius: 8,
+    paddingVertical: 20,
+    backgroundColor: 'white',
+    marginHorizontal: 30, // Adjusted for consistency
+    borderRadius: 20, // Adjusted for consistency
+    shadowColor: 'rgba(0, 0, 0, 0.25)', 
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 5,
+    elevation: 5, // Adjusted for Android
   },
   buttonText: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     textAlign: 'center',
     color: '#333',
@@ -78,6 +83,7 @@ const styles = StyleSheet.create({
   loginContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
+    marginTop: 10, 
   },
   text: {
     paddingTop: 15,
@@ -86,8 +92,10 @@ const styles = StyleSheet.create({
   },
   loginText: {
     fontWeight: '600',
-    color: '#FFD700',
+    color: 'yellow',
   },
 });
+
+
 
 export default WelcomeScreen;

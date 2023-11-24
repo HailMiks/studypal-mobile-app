@@ -1,15 +1,30 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Image, TextInput, StyleSheet, Dimensions, KeyboardAvoidingView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeftIcon } from 'react-native-heroicons/solid';
 import { themeColors } from '../theme';
 import { useNavigation } from '@react-navigation/native';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../config/firebase';
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
 
 export default function SignUpScreen() {
   const navigation = useNavigation();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleSubmit = async ()=>{
+    if(email && password){
+        try{
+            await createUserWithEmailAndPassword(auth, email, password)
+        }catch(err){
+            console.log('got error: ', err.message);
+        }
+    }
+  }
+
 
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: themeColors.bg }}>
@@ -34,23 +49,24 @@ export default function SignUpScreen() {
           <Text style={styles.label}>Full Name</Text>
           <TextInput
             style={styles.input}
-            value="john snow"
             placeholder="Enter Name"
           />
           <Text style={styles.label}>Email Address</Text>
           <TextInput
             style={styles.input}
-            value="john@gmail.com"
-            placeholder="Enter Email"
+            placeholder="t1.faker@gmail.com"
+            value={email}
+            onChangeText={(value) => setEmail(value)}
           />
           <Text style={styles.label}>Password</Text>
           <TextInput
             style={styles.input}
             secureTextEntry
-            value="test12345"
             placeholder="Enter Password"
+            value={password}
+            onChangeText={(value) => setPassword(value)}
           />
-          <TouchableOpacity style={styles.signupButton}>
+          <TouchableOpacity style={styles.signupButton} onPress={handleSubmit}>
             <Text style={styles.signupButtonText}>SIGN UP</Text>
           </TouchableOpacity>
         </View>

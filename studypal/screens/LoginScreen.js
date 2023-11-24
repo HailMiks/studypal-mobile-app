@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image, TextInput, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, Image, TextInput, StyleSheet, Dimensions, KeyboardAvoidingView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeftIcon } from 'react-native-heroicons/solid';
 import { themeColors } from '../theme';
@@ -14,7 +14,7 @@ export default function LoginScreen() {
   const imageUrl = require('../assets/images/login-flash.jpg');
 
   return (
-    <View style={{ flex: 1, backgroundColor: themeColors.bg }}>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: themeColors.bg }}>
       <SafeAreaView style={{ flex: 1 }}>
         <View style={styles.backButtonContainer}>
           <TouchableOpacity
@@ -24,7 +24,6 @@ export default function LoginScreen() {
             <ArrowLeftIcon size={20} color="black" />
           </TouchableOpacity>
         </View>
-        {/* Image Container */}
         <View style={styles.imageContainer}>
           <Image
             source={imageUrl}
@@ -32,21 +31,18 @@ export default function LoginScreen() {
           />
         </View>
       </SafeAreaView>
-      {/* Form Container */}
       <View style={styles.formContainer}>
         <View style={styles.form}>
           <Text style={styles.label}>Email Address</Text>
           <TextInput
             style={styles.input}
-            placeholder="email"
-            value="john@gmail.com"
+            placeholder="t1.faker@gmail.com"
           />
           <Text style={styles.label}>Password</Text>
           <TextInput
             style={styles.input}
             secureTextEntry
-            placeholder="password"
-            value="test12345"
+            placeholder="Password"
           />
           <TouchableOpacity style={styles.forgotPasswordLink}>
             <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
@@ -62,7 +58,7 @@ export default function LoginScreen() {
           </TouchableOpacity>
         </View>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -127,6 +123,7 @@ const styles = StyleSheet.create({
   },
   forgotPasswordText: {
     color: '#9F9F9F',
+    fontSize: 15,
   },
   loginButton: {
     padding: 20,
