@@ -7,7 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { getFirestore } from 'firebase/firestore';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, setDoc, doc } from 'firebase/firestore';
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
@@ -25,20 +25,18 @@ export default function SignUpScreen() {
         const user = userCredential.user;
   
         const db = getFirestore();
-        
-        // Reference the 'users' collection
         const usersCollection = collection(db, 'users');
   
-        // Use the UID as the document ID when adding the document
-        const docRef = await addDoc(usersCollection, {
-          [user.uid]: {
-            userName: userName,
-            email: email,
-            // Add any other fields you want to store
-          },
+        const uid = user.uid;
+  
+        const docRef = doc(usersCollection, uid); // Set the document ID to be the UID
+        await setDoc(docRef, {
+          userName: userName,
+          email: email,
+          // Add any other fields you want to store
         });
   
-        console.log('Document written with ID: ', docRef.id);
+        console.log('Document written with ID: ', uid);
         console.log('User UID:', user.uid);
         console.log('UserName:', userName);
         console.log('Email:', email);
@@ -47,8 +45,8 @@ export default function SignUpScreen() {
         console.error('Error:', err);
       }
     }
-  };
-
+  };  
+  
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: themeColors.bg }}>
       <SafeAreaView style={{ flex: 1 }}>
