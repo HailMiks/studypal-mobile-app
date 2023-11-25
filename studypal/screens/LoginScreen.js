@@ -1,15 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Image, TextInput, StyleSheet, Dimensions, KeyboardAvoidingView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeftIcon } from 'react-native-heroicons/solid';
 import { themeColors } from '../theme';
 import { useNavigation } from '@react-navigation/native';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../config/firebase';  // This import may not be correct. Verify the correct import statement.
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
 
 export default function LoginScreen() {
   const navigation = useNavigation();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleSubmit = async () => {
+    if (email && password) {
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (err) {
+        console.log('got error: ', err.message);
+      }
+    }
+  }
 
   const imageUrl = require('../assets/images/login-flash.jpg');
 
@@ -37,17 +51,21 @@ export default function LoginScreen() {
           <TextInput
             style={styles.input}
             placeholder="t1.faker@gmail.com"
+            value={email}
+            onChangeText={(value) => setEmail(value)}
           />
           <Text style={styles.label}>Password</Text>
           <TextInput
             style={styles.input}
             secureTextEntry
             placeholder="Password"
+            value={password}
+            onChangeText={(value) => setPassword(value)}
           />
           <TouchableOpacity style={styles.forgotPasswordLink}>
             <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.loginButton}>
+          <TouchableOpacity style={styles.loginButton} onPress={handleSubmit}>
             <Text style={styles.loginButtonText}>LOG IN</Text>
           </TouchableOpacity>
         </View>
@@ -141,7 +159,7 @@ const styles = StyleSheet.create({
   signupContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 60, 
+    marginTop: 60,
   },
   signupText: {
     color: '#9F9F9F',

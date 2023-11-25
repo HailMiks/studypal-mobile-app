@@ -12,19 +12,22 @@ const windowHeight = Dimensions.get('window').height;
 
 export default function SignUpScreen() {
   const navigation = useNavigation();
+  const [userName, setUserName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleSubmit = async ()=>{
-    if(email && password){
-        try{
-            await createUserWithEmailAndPassword(auth, email, password)
-        }catch(err){
-            console.log('got error: ', err.message);
-        }
-    }
-  }
+  const handleSubmit = async () => {
+    if (email && password) {
+      try {
+        await createUserWithEmailAndPassword(auth, email, password);
 
+        // If sign up is successful, navigate to HomeScreen and pass the userName as a parameter
+        navigation.navigate('Home', { params: { userName, email } });
+      } catch (err) {
+        console.log('got error: ', err.message);
+      }
+    }
+  };
 
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: themeColors.bg }}>
@@ -50,6 +53,8 @@ export default function SignUpScreen() {
           <TextInput
             style={styles.input}
             placeholder="Enter Name"
+            value={userName}
+            onChangeText={(value) => setUserName(value)}
           />
           <Text style={styles.label}>Email Address</Text>
           <TextInput
