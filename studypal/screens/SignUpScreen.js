@@ -6,6 +6,8 @@ import { themeColors } from '../theme';
 import { useNavigation } from '@react-navigation/native';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../config/firebase';
+import { getFirestore } from 'firebase/firestore';
+import { collection, addDoc } from 'firebase/firestore';
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
@@ -19,12 +21,30 @@ export default function SignUpScreen() {
   const handleSubmit = async () => {
     if (email && password) {
       try {
-        await createUserWithEmailAndPassword(auth, email, password);
-
-        // If sign up is successful, navigate to HomeScreen and pass the userName as a parameter
-        navigation.navigate('Home', { params: { userName, email } });
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+  
+        const db = getFirestore();
+        
+        // Reference the 'users' collection
+        const usersCollection = collection(db, 'users');
+  
+        // Use the UID as the document ID when adding the document
+        const docRef = await addDoc(usersCollection, {
+          [user.uid]: {
+            userName: userName,
+            email: email,
+            // Add any other fields you want to store
+          },
+        });
+  
+        console.log('Document written with ID: ', docRef.id);
+        console.log('User UID:', user.uid);
+        console.log('UserName:', userName);
+        console.log('Email:', email);
+  
       } catch (err) {
-        console.log('got error: ', err.message);
+        console.error('Error:', err);
       }
     }
   };

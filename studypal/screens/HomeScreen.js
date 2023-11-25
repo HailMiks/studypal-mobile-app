@@ -1,15 +1,47 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, DrawerLayoutAndroid } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { signOut } from 'firebase/auth';
 import { auth } from '../config/firebase';
-import { useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
 
 export default function HomeScreen() {
   const drawerRef = useRef(null);
-  const route = useRoute();
-  const { userName, email } = route.params?.params || {};
+  const [userData, setUserData] = useState({});
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      // Get the current user
+      const currentUser = auth.currentUser;
+
+      if (currentUser) {
+        // Get the UID of the current user
+        const uid = currentUser.uid;
+
+        // Fetch user data from Firestore using the UID
+        const db = getFirestore();
+        const userDocRef = doc(db, 'users', uid);
+
+        try {
+          const userDocSnap = await getDoc(userDocRef);
+
+          if (userDocSnap.exists()) {
+            // Update state with user data
+            const userData = userDocSnap.data();
+            setUserData(userData);
+            console.log('User Data:', userData);
+          } else {
+            console.log('User document does not exist.');
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error.message);
+        }
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -28,9 +60,8 @@ export default function HomeScreen() {
   };
 
   const navigateToScreen = (screen) => {
-    // Add navigation logic to navigate to the selected screen
     console.log(`Navigate to ${screen}`);
-    closeDrawer(); // Close the drawer after navigation
+    closeDrawer();
   };
 
   const navigationView = (
@@ -42,8 +73,8 @@ export default function HomeScreen() {
             style={styles.iconImage}
           />
         </View>
-        <Text style={styles.userName}>{userName}</Text>
-        <Text style={styles.email}>{email}</Text>
+        <Text style={styles.userName}>{userData.userName}</Text>
+        <Text style={styles.email}>{userData.email}</Text>
       </View>
       <TouchableOpacity onPress={() => navigateToScreen('Screen1')}>
         <Text style={styles.drawerItem}>Screen 1</Text>
@@ -53,9 +84,8 @@ export default function HomeScreen() {
       </TouchableOpacity>
       
       <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-          <Text style={styles.logoutButtonText}>Logout</Text>
-        </TouchableOpacity>
-      {/* Add more drawer items as needed */}
+        <Text style={styles.logoutButtonText}>Logout</Text>
+      </TouchableOpacity>
     </View>
   );
 
