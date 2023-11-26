@@ -67,7 +67,7 @@ export default function SignUpScreen() {
       </SafeAreaView>
       <View style={styles.formContainer}>
         <View style={styles.form}>
-          <Text style={styles.label}>Full Name</Text>
+          <Text style={styles.label}>User Name</Text>
           <TextInput
             style={styles.input}
             placeholder="Enter Name"

@@ -216,6 +216,10 @@ export default function HomeScreen() {
     }
   };
 
+  const navigateToDeckCreation = () => {
+    navigation.navigate('DeckCreation');
+  };
+
   return (
     <DrawerLayoutAndroid
       ref={drawerRef}
@@ -292,6 +296,12 @@ export default function HomeScreen() {
             </View>
           </View>
         </Modal>
+        <TouchableOpacity
+          style={styles.plusButton}
+          onPress={navigateToDeckCreation}
+        >
+          <Text style={styles.plusButtonText}>&#65291;</Text>
+        </TouchableOpacity>
       </SafeAreaView>
     </DrawerLayoutAndroid>
   );
@@ -483,6 +493,26 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     paddingHorizontal: 10,
     marginVertical: 20,
+  },
+  plusButton: {
+    position: 'absolute',
+    bottom: 20,
+    justifyContent: 'center',
+    backgroundColor: 'black',
+    borderRadius: 35,
+    width: 70,
+    height: 70,
+    alignItems: 'center',
+    left: '50%',
+    transform: [{ translateX: -35 }], 
+  },
+  
+  plusButtonText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: 'white',
+    marginTop: 'auto',
+    marginBottom: 'auto'
   },
 });
 
