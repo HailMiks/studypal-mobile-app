@@ -9,7 +9,7 @@ import {
   ScrollView,
   Modal,
   TextInput,
-  Button,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { signOut } from 'firebase/auth';
@@ -120,29 +120,44 @@ export default function HomeScreen() {
 
   const renderCategoryButtons = () => {
     return categories.map((category, index) => (
-      <View key={index} style={styles.categoryButtonContainer}>
-        <TouchableOpacity
-          style={[
-            styles.categoryButton,
-            {
-              backgroundColor: selectedCategory === category ? '#D9D9D9' : 'white',
-              color: selectedCategory === category ? 'white' : 'black',
-            },
-          ]}
-          onPress={() => setSelectedCategory(category)}
-        >
-          <Text style={styles.categoryButtonText}>{category}</Text>
-        </TouchableOpacity>
-        {category !== 'All' && (
-          <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={() => deleteCategory(category)}
+      <TouchableOpacity
+        key={index}
+        onPress={() => setSelectedCategory(category)}
+        onLongPress={() => deleteCategoryConfirmation(category)}
+      >
+        <View style={styles.categoryButtonContainer}>
+          <View
+            style={[
+              styles.categoryButton,
+              {
+                backgroundColor:
+                  selectedCategory === category ? '#D9D9D9' : 'white',
+                color: selectedCategory === category ? 'white' : 'black',
+              },
+            ]}
           >
-            <Text style={styles.deleteButtonText}>Delete</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+            <Text style={styles.categoryButtonText}>{category}</Text>
+          </View>
+        </View>
+      </TouchableOpacity>
     ));
+  };
+
+  const deleteCategoryConfirmation = (categoryToDelete) => {
+    Alert.alert(
+      'Delete Category',
+      `Are you sure you want to delete the category '${categoryToDelete}'?`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          onPress: () => deleteCategory(categoryToDelete),
+        },
+      ]
+    );
   };
 
   const addCategory = async () => {
@@ -175,23 +190,29 @@ export default function HomeScreen() {
   };
 
   const deleteCategory = async (categoryToDelete) => {
-    // Update categories in Firestore
-    const currentUser = auth.currentUser;
-    const uid = currentUser.uid;
-    const db = getFirestore();
-    const userDocRef = doc(db, 'users', uid);
+    if (categoryToDelete !== 'All') {
+      // Update categories in Firestore
+      const currentUser = auth.currentUser;
+      const uid = currentUser.uid;
+      const db = getFirestore();
+      const userDocRef = doc(db, 'users', uid);
   
-    try {
-      await updateDoc(userDocRef, {
-        categories: arrayRemove(categoryToDelete),
-      });
+      try {
+        await updateDoc(userDocRef, {
+          categories: arrayRemove(categoryToDelete),
+        });
   
-      // Update local state
-      setCategories((prevCategories) =>
-        prevCategories.filter((category) => category !== categoryToDelete)
-      );
-    } catch (error) {
-      console.error('Error deleting category:', error.message);
+        // Update local state
+        setCategories((prevCategories) =>
+          prevCategories.filter((category) => category !== categoryToDelete)
+        );
+      } catch (error) {
+        console.error('Error deleting category:', error.message);
+      }
+    } else {
+      // Handle the case where the user tries to delete the "All" category
+      Alert.alert("Cannot delete this category.");
+      console.warn();("Cannot delete 'All' category.");
     }
   };
 
@@ -219,24 +240,28 @@ export default function HomeScreen() {
           horizontal
           showsHorizontalScrollIndicator={false}
           style={styles.categoryButtonsScrollView}
-          contentContainerStyle={styles.categoryButtonsContainer}
+          contentContainerStyle={{ paddingHorizontal: 25, ...styles.categoryButtonsContainer }}
         >
           {renderCategoryButtons()}
           <TouchableOpacity
-            style={styles.categoryButton}
+            style={styles.addCategoryButton}
             onPress={() => setModalVisible(true)}
           >
-            <Text style={styles.categoryButtonText}>+</Text>
+            <Text style={styles.addCategoryButtonText}>&#65291;</Text>
           </TouchableOpacity>
         </ScrollView>
 
-        <View style={styles.contentBelowButtons}>
-          <Text>Hey</Text>
-        </View>
+        {selectedCategory === 'All' && (
+          <View style={styles.deckContainer}>
+            <TouchableOpacity style={styles.deck}>
+              <Text>Hey</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Modal for adding new category */}
         <Modal
-          animationType="slide"
+          animationType="fade"
           transparent={true}
           visible={isModalVisible}
           onRequestClose={() => setModalVisible(false)}
@@ -250,8 +275,20 @@ export default function HomeScreen() {
                 value={newCategory}
                 onChangeText={(text) => setNewCategory(text)}
               />
-              <Button title="Add" onPress={addCategory} />
-              <Button title="Cancel" onPress={() => setModalVisible(false)} />
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={[styles.modalButton, { borderColor: '#9F9F9F', borderWidth: 1 }]}
+                  onPress={() => setModalVisible(false)}
+                >
+                  <Text style={styles.modalButtonText, { color: 'black' }}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalButton, { backgroundColor: 'black', color: 'white' }]}
+                  onPress={addCategory}
+                >
+                  <Text style={styles.modalButtonText}>Add</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </Modal>
@@ -284,7 +321,7 @@ const styles = StyleSheet.create({
   },
   drawerProfile: {
     flexDirection: 'row',
-    alignItems: 'center',  // Align items in the center vertically
+    alignItems: 'center',
     marginTop: 41,
     marginHorizontal: 24,
   },
@@ -303,9 +340,9 @@ const styles = StyleSheet.create({
     letterSpacing: 0.25,
   },
   logoutButton: {
-    marginTop: 'auto', 
-    flexDirection: 'row', 
-    alignItems: 'center', 
+    marginTop: 'auto',
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 35,
     borderRadius: 5,
   },
@@ -330,13 +367,11 @@ const styles = StyleSheet.create({
     marginLeft: 15,
   },
   drawerItem: {
-    fontSize: 20,
+    fontSize: 15,
     padding: 8,
     paddingBottom: 25,
     marginTop: 15,
     color: 'black',
-    fontSize: 15,
-    marginLeft: 1,
   },
   iconContainer: {
     marginRight: 5,
@@ -357,24 +392,10 @@ const styles = StyleSheet.create({
   categoryButtonContainer: {
     flexDirection: 'row',
     marginTop: 7,
-    marginLeft: 25,
+    marginLeft: 5,
     maxHeight: 60,
   },
   addCategoryButton: {
-    backgroundColor: '#4CAF50',
-    borderRadius: 30,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    marginLeft: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  addCategoryButtonText: {
-    fontSize: 16,
-    color: 'white',
-  },
-  categoryButton: {
-    paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 30,
     borderWidth: 2,
@@ -382,18 +403,87 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
     justifyContent: 'center',
   },
+  addCategoryButtonText: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: 'black',
+  },
+  categoryButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 30,
+    borderWidth: 2,
+    borderColor: '#9F9F9F',
+    justifyContent: 'center',
+  },
   categoryButtonText: {
     fontSize: 16,
-    color: 'black', // Default font color
   },
   categoryButtonsScrollView: {
-    maxHeight: 60,  // Set a maximum height for the ScrollView
+    maxHeight: 60,
   },
-  contentBelowButtons: {
+  deckContainer: {
     flex: 1,
     alignItems: 'center',
-    backgroundColor: 'lightgray',
     marginTop: 25,
     marginHorizontal: 25,
   },
+  deck: {
+    backgroundColor: '#D9D9D9',
+    marginHorizontal: 25,
+    marginBottom: 10,
+    width: '100%',
+    height: 190,
+    borderRadius: 15,
+  },
+  deleteButton: {
+    borderWidth: 1,
+    padding: 3,
+    marginBottom: 20,
+  },
+  modalContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    width: 250,
+    borderColor: '#9F9F9F',
+    borderWidth: 2,
+    borderRadius: 25,
+    alignSelf: 'center',
+    marginTop: 'auto',
+    marginBottom: 'auto',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    marginTop: 10,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 10,
+    marginHorizontal: 5,
+    borderRadius: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalButtonText: {
+    fontSize: 16,
+    color: 'white',
+  },
+  modalContent: {
+    paddingVertical: 30,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  modalInput: {
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    marginVertical: 20,
+  },
 });
+
+
