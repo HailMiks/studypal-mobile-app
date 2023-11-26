@@ -66,13 +66,13 @@ const styles = StyleSheet.create({
   button: {
     paddingVertical: 20,
     backgroundColor: 'white',
-    marginHorizontal: 30, // Adjusted for consistency
-    borderRadius: 20, // Adjusted for consistency
+    marginHorizontal: 30, 
+    borderRadius: 20, 
     shadowColor: 'rgba(0, 0, 0, 0.25)', 
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 1,
     shadowRadius: 5,
-    elevation: 5, // Adjusted for Android
+    elevation: 5, 
   },
   buttonText: {
     fontSize: 20,

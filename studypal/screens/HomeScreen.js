@@ -284,7 +284,7 @@ export default function HomeScreen() {
                   style={[styles.modalButton, { borderColor: '#9F9F9F', borderWidth: 1 }]}
                   onPress={() => setModalVisible(false)}
                 >
-                  <Text style={styles.modalButtonText, { color: 'black' }}>Cancel</Text>
+                  <Text style={[styles.modalButtonText, { color: 'black' }]}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.modalButton, { backgroundColor: 'black', color: 'white' }]}
