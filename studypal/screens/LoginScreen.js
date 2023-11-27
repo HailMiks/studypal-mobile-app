@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Image, TextInput, StyleSheet, Dimensions, KeyboardAvoidingView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeftIcon } from 'react-native-heroicons/solid';
-import { themeColors } from '../theme';
 import { useNavigation } from '@react-navigation/native';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../config/firebase';  // This import may not be correct. Verify the correct import statement.
@@ -28,7 +27,7 @@ export default function LoginScreen() {
   const imageUrl = require('../assets/images/login-flash.jpg');
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: themeColors.bg }}>
+    <KeyboardAvoidingView style={{ flex: 1 }}>
       <SafeAreaView style={{ flex: 1 }}>
         <View style={styles.backButtonContainer}>
           <TouchableOpacity

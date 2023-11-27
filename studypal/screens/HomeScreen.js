@@ -16,8 +16,10 @@ import { signOut } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { getFirestore, doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import FontAwesomeIcon from 'react-native-vector-icons/FontAwesome';
+import { useNavigation } from '@react-navigation/native';
 
 export default function HomeScreen() {
+  const navigation = useNavigation(); 
   const drawerRef = useRef(null);
   const [userData, setUserData] = useState({});
   const [selectedCategory, setSelectedCategory] = useState('All');
