@@ -10,11 +10,12 @@ import {
   Modal,
   TextInput,
   Alert,
+  FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { signOut } from 'firebase/auth';
 import { auth } from '../config/firebase';
-import { getFirestore, doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, getDocs, updateDoc, arrayUnion, arrayRemove, collection } from 'firebase/firestore';
 import FontAwesomeIcon from 'react-native-vector-icons/FontAwesome';
 import { useNavigation } from '@react-navigation/native';
 
@@ -26,6 +27,7 @@ export default function HomeScreen() {
   const [categories, setCategories] = useState(['All']);
   const [newCategory, setNewCategory] = useState('');
   const [isModalVisible, setModalVisible] = useState(false);
+  const [decks, setDecks] = useState([]);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -58,6 +60,46 @@ export default function HomeScreen() {
 
     fetchUserData();
   }, []);
+
+  useEffect(() => {
+    const fetchDecks = async () => {
+      const currentUser = auth.currentUser;
+
+      if (currentUser) {
+        const uid = currentUser.uid;
+        const db = getFirestore();
+        const userDocRef = collection(db, 'users', uid);
+        const userDecksCollectionRef = collection(userDocRef, 'decks');
+
+        try {
+          const decksQuery = query(userDecksCollectionRef);
+
+          const querySnapshot = await getDocs(decksQuery);
+
+          const userDecks = querySnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+
+          setDecks(userDecks);
+        } catch (error) {
+          console.error('Error fetching user decks:', error.message);
+        }
+      }
+    };
+
+    fetchDecks();
+  }, []);
+
+  const renderItem = ({ item }) => (
+    <TouchableOpacity
+      onPress={() => navigation.navigate('DeckDetails', { deckId: item.id })}
+      style={{ padding: 16, borderBottomWidth: 1, borderBottomColor: '#ccc' }}
+    >
+      <Text>{item.deckName}</Text>
+      <Text>{item.category}</Text>
+    </TouchableOpacity>
+  );
 
   const handleLogout = async () => {
     try {
@@ -258,10 +300,13 @@ export default function HomeScreen() {
         </ScrollView>
 
         {selectedCategory === 'All' && (
-          <View style={styles.deckContainer}>
-            <TouchableOpacity style={styles.deck}>
-              <Text>Hey</Text>
-            </TouchableOpacity>
+          <View style={{ flex: 1, padding: 16 }}>
+            <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 16 }}>Your Decks</Text>
+            <FlatList
+              data={decks}
+              renderItem={renderItem}
+              keyExtractor={(item) => item.id}
+            />
           </View>
         )}
 
