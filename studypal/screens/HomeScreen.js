@@ -15,7 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { signOut } from 'firebase/auth';
 import { auth } from '../config/firebase';
-import { getFirestore, doc, getDoc, getDocs, updateDoc, arrayUnion, arrayRemove, collection } from 'firebase/firestore';
+import { getFirestore, query, where, doc, getDoc, getDocs, updateDoc, arrayUnion, arrayRemove, collection } from 'firebase/firestore';
 import FontAwesomeIcon from 'react-native-vector-icons/FontAwesome';
 import { useNavigation } from '@react-navigation/native';
 
@@ -62,34 +62,40 @@ export default function HomeScreen() {
   }, []);
 
   useEffect(() => {
-    const fetchDecks = async () => {
-      const currentUser = auth.currentUser;
+  const fetchDecks = async () => {
+    const currentUser = auth.currentUser;
 
-      if (currentUser) {
-        const uid = currentUser.uid;
-        const db = getFirestore();
-        const userDocRef = collection(db, 'users', uid);
-        const userDecksCollectionRef = collection(userDocRef, 'decks');
+    if (currentUser) {
+      const uid = currentUser.uid;
+      const db = getFirestore();
+      const userDecksCollectionRef = collection(db, 'users', uid, 'decks');
 
-        try {
-          const decksQuery = query(userDecksCollectionRef);
+      try {
+        let decksQuery = userDecksCollectionRef;
 
-          const querySnapshot = await getDocs(decksQuery);
-
-          const userDecks = querySnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-
-          setDecks(userDecks);
-        } catch (error) {
-          console.error('Error fetching user decks:', error.message);
+        // Filter by category if it's not 'All'
+        if (selectedCategory !== 'All') {
+          decksQuery = where('category', '==', selectedCategory);
         }
-      }
-    };
 
-    fetchDecks();
-  }, []);
+        const querySnapshot = await getDocs(query(userDecksCollectionRef, decksQuery));
+
+        const userDecks = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        setDecks(userDecks);
+      } catch (error) {
+        console.error('Error fetching user decks:', error.message);
+      }
+    }
+  };
+
+  fetchDecks();
+}, [selectedCategory]);
+
+  
 
   const renderItem = ({ item }) => (
     <TouchableOpacity

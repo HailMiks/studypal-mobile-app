@@ -111,18 +111,20 @@ export default function DeckCreationScreen() {
 
   const handleSubmit = async () => {
     try {
-      // Check if there's at least 1 section and a name
       if (sections.length > 0 && deckName.trim() !== '' && selectedCategory !== '') {
         const currentUser = auth.currentUser;
   
         if (currentUser) {
           const uid = currentUser.uid;
           const db = getFirestore();
+          
+          // Reference to the user's document
           const userDocRef = doc(db, 'users', uid);
   
-          // Create a reference to the 'decks' subcollection within the user's document
-          const userDecksCollectionRef = collection(userDocRef, 'decks');
+          // Reference to the 'decks' collection within the user's document
+          const userDecksCollection = collection(userDocRef, 'decks');
   
+          // Data for the new deck
           const deckData = {
             deckName,
             category: selectedCategory,
@@ -132,27 +134,19 @@ export default function DeckCreationScreen() {
             })),
           };
   
-          // Add the deck to the 'decks' subcollection within the user's document
-          const docRef = await addDoc(userDecksCollectionRef, deckData);
+          // Add the deck to the 'decks' collection within the user's document
+          const docRef = await addDoc(userDecksCollection, deckData);
   
           console.log('Deck successfully created with ID:', docRef.id);
   
-          // Check if the selected category is 'All'
-          if (selectedCategory === 'All') {
-            // If 'All', also add the deck to the 'all' category
-            const allDecksCollection = collection(db, 'categories', 'all');
-            await addDoc(allDecksCollection, {
-              deckId: docRef.id,
-            });
-          }
+          // Optionally, you can update other collections or documents based on your requirements.
   
           // Navigate to the HomeScreen
           navigation.navigate('Home');
         } else {
-          console.log('User not logged in.');
+          console.log('User not authenticated.');
         }
       } else {
-        // Display an error or prompt the user to fill in required fields
         console.log('Please fill in all required fields.');
       }
     } catch (error) {

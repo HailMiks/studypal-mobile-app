@@ -2,14 +2,24 @@ import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { Video } from 'expo-av';
+
 
 const WelcomeScreen = () => {
   const navigation = useNavigation();
 
   return (
     <SafeAreaView style={styles.container}>
+      <Video
+        source={{ uri: 'https://i.imgur.com/tJYWOW7.mp4' }}
+        style={[styles.backgroundVideo, { transform: [{ rotate: '-180deg' }] }]}
+        resizeMode="cover"
+        isLooping
+        shouldPlay
+        useNativeControls={false}
+      />
       <View style={styles.content}>
-        <Text style={styles.title}>Let's Get Started!</Text>
+        <Text style={styles.title}>Welcome to Studypal!</Text>
         <View style={styles.imageContainer}>
           <Image
             source={require('../assets/images/welcome.png')}
@@ -38,15 +48,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  backgroundVideo: {
+    ...StyleSheet.absoluteFillObject,
+  },
   content: {
     flex: 1,
     justifyContent: 'space-around',
     marginVertical: 4,
   },
   title: {
-    color: 'white',
+    color: 'black',
     fontWeight: 'bold',
-    fontSize: 25,
+    fontSize: 35,
     textAlign: 'center',
   },
   imageContainer: {
@@ -56,13 +69,17 @@ const styles = StyleSheet.create({
   image: {
     width: 350,
     height: 350,
+    shadowColor: 'black',
+    shadowOffset: { width: 30, height: 30 },
+    shadowOpacity: 0.9,
+    shadowRadius: 8,
   },
   buttonContainer: {
     marginVertical: 10, 
   },
   button: {
     paddingVertical: 20,
-    backgroundColor: 'white',
+    backgroundColor: 'black',
     marginHorizontal: 30, 
     borderRadius: 20, 
     shadowColor: 'rgba(0, 0, 0, 0.25)', 
@@ -75,7 +92,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     textAlign: 'center',
-    color: '#333',
+    color: 'white',
   },
   loginContainer: {
     flexDirection: 'row',
@@ -84,12 +101,12 @@ const styles = StyleSheet.create({
   },
   text: {
     paddingTop: 15,
-    color: 'white',
+    color: '#9F9F9F',
     fontWeight: '600',
   },
   loginText: {
     fontWeight: '600',
-    color: 'yellow',
+    color: '#00a8e8',
   },
 });
 
