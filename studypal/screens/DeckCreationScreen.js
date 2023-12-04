@@ -74,8 +74,6 @@ export default function DeckCreationScreen() {
   
     fetchUserData();
   }, []);
-  
-  
 
   const addNewSection = () => {
     setSections((prevSections) => [
@@ -110,49 +108,67 @@ export default function DeckCreationScreen() {
   };
 
   const handleSubmit = async () => {
-    try {
-      if (sections.length > 0 && deckName.trim() !== '' && selectedCategory !== '') {
-        const currentUser = auth.currentUser;
-  
-        if (currentUser) {
-          const uid = currentUser.uid;
-          const db = getFirestore();
-          
-          // Reference to the user's document
-          const userDocRef = doc(db, 'users', uid);
-  
-          // Reference to the 'decks' collection within the user's document
-          const userDecksCollection = collection(userDocRef, 'decks');
-  
-          // Data for the new deck
-          const deckData = {
-            deckName,
-            category: selectedCategory,
-            sections: sections.map((section) => ({
-              questions: section.questions,
-              answer: section.answer,
-            })),
-          };
-  
-          // Add the deck to the 'decks' collection within the user's document
-          const docRef = await addDoc(userDecksCollection, deckData);
-  
-          console.log('Deck successfully created with ID:', docRef.id);
-  
-          // Optionally, you can update other collections or documents based on your requirements.
-  
-          // Navigate to the HomeScreen
-          navigation.navigate('Home');
-        } else {
-          console.log('User not authenticated.');
+  try {
+    if (sections.length > 0 && deckName.trim() !== '' && selectedCategory !== '') {
+      const currentUser = auth.currentUser;
+
+      if (currentUser) {
+        const uid = currentUser.uid;
+        const db = getFirestore();
+
+        // Reference to the user's document
+        const userDocRef = doc(db, 'users', uid);
+
+        // Get the user's document data
+        const userDocSnap = await getDoc(userDocRef);
+        const userData = userDocSnap.data();
+
+        if (!userData) {
+          console.log('User document does not exist.');
+          return;
         }
+
+        // Ensure that the 'categories' field exists in the user's document
+        const categories = userData.categories || [];
+
+        // Ensure that the selected category exists in the 'categories' array
+        if (!categories.includes(selectedCategory)) {
+          console.log(`Category '${selectedCategory}' does not exist.`);
+          console.log('User categories:', categories);
+          return;
+        }
+
+        // Reference to the 'decks' collection within the selected category
+        const categoryDecksCollectionRef = collection(db, `users/${uid}/categories/${selectedCategory}/decks`);
+
+        // Data for the new deck
+        const deckData = {
+          deckName,
+          sections: sections.map((section) => ({
+            questions: section.questions,
+            answer: section.answer,
+          })),
+        };
+
+        // Add the deck to the 'decks' collection within the selected category
+        const docRef = await addDoc(categoryDecksCollectionRef, deckData);
+
+        console.log('Deck successfully created with ID:', docRef.id);
+
+        // Optionally, you can update other collections or documents based on your requirements.
+
+        // Navigate to the HomeScreen
+        navigation.navigate('Home');
       } else {
-        console.log('Please fill in all required fields.');
+        console.log('User not authenticated.');
       }
-    } catch (error) {
-      console.error('Error creating deck:', error);
+    } else {
+      console.log('Please fill in all required fields.');
     }
-  };
+  } catch (error) {
+    console.error('Error creating deck:', error);
+  }
+};
 
 return (
   <KeyboardAvoidingView style={{ flex: 1 }}>
