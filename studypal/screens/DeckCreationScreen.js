@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   SafeAreaView,
   Dimensions,
+  ScrollView
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { ArrowLeftIcon } from 'react-native-heroicons/solid';
@@ -157,6 +158,7 @@ export default function DeckCreationScreen() {
 return (
   <KeyboardAvoidingView style={{ flex: 1 }}>
     <SafeAreaView style={{ flex: 1 }}>
+      <ScrollView>
       <View style={styles.backButtonContainer}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <ArrowLeftIcon size={20} color="black" />
@@ -256,6 +258,7 @@ return (
           </View>
       </View>
     </View>
+    </ScrollView>
     </SafeAreaView>
   </KeyboardAvoidingView>
   );
@@ -288,7 +291,7 @@ const styles = StyleSheet.create({
       marginRight: -30,
     },
     formContainer: {
-      marginTop: -180,
+      marginTop: -120,
       flex: 1,
       backgroundColor: 'white',
       paddingHorizontal: 8,
@@ -301,8 +304,8 @@ const styles = StyleSheet.create({
       marginHorizontal: 25,
     },
     textStyle: {
-        fontSize: 25,
-        fontWeight: 'bold',
+      fontSize: 25,
+      fontWeight: 'bold',
     },
     label: {
       color: '#BDBDBD',
@@ -340,10 +343,10 @@ const styles = StyleSheet.create({
       fontSize: 12,
     },
     horizontalLine: {
-        borderBottomColor: '#9F9F9F',
-        borderBottomWidth: StyleSheet.hairlineWidth,
-        marginTop: -10,
-        marginBottom: 20,
+      borderBottomColor: '#9F9F9F',
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      marginTop: -10,
+      marginBottom: 20,
     },
     sectionContainer: {
       borderWidth: 1,

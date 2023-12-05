@@ -62,48 +62,51 @@ export default function HomeScreen() {
   }, []);
 
   useEffect(() => {
-  const fetchDecks = async () => {
-    const currentUser = auth.currentUser;
+    const fetchDecks = async () => {
+      const currentUser = auth.currentUser;
 
-    if (currentUser) {
-      const uid = currentUser.uid;
-      const db = getFirestore();
-      const userDecksCollectionRef = collection(db, 'users', uid, 'decks');
+      if (currentUser) {
+        const uid = currentUser.uid;
+        const db = getFirestore();
+        const userDecksCollectionRef = collection(db, 'users', uid, 'decks');
 
-      try {
-        let decksQuery = userDecksCollectionRef;
+        try {
+          let decksQuery;
 
-        // Filter by category if it's not 'All'
-        if (selectedCategory !== 'All') {
-          decksQuery = where('category', '==', selectedCategory);
+          // Filter by category if it's not 'All'
+          if (selectedCategory !== 'All') {
+            decksQuery = query(userDecksCollectionRef, where('category', '==', selectedCategory));
+          } else {
+            decksQuery = userDecksCollectionRef;
+          }
+
+          const querySnapshot = await getDocs(decksQuery);
+
+          const userDecks = querySnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+
+          setDecks(userDecks);
+        } catch (error) {
+          console.error('Error fetching user decks:', error.message);
         }
-
-        const querySnapshot = await getDocs(query(userDecksCollectionRef, decksQuery));
-
-        const userDecks = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-
-        setDecks(userDecks);
-      } catch (error) {
-        console.error('Error fetching user decks:', error.message);
       }
-    }
-  };
+    };
 
-  fetchDecks();
-}, [selectedCategory]);
-
-  
+    fetchDecks();
+  }, [selectedCategory]);
 
   const renderItem = ({ item }) => (
     <TouchableOpacity
       onPress={() => navigation.navigate('DeckDetails', { deckId: item.id })}
-      style={{ padding: 16, borderBottomWidth: 1, borderBottomColor: '#ccc' }}
+      style={styles.deck}
     >
-      <Text>{item.deckName}</Text>
-      <Text>{item.category}</Text>
+      <Text style={styles.deckCategory}>{item.category}</Text>
+      <View style={styles.horizontalLine}/>
+      <View style={styles.deckNameContainer}>
+        <Text style={styles.deckName}>{item.deckName}</Text>
+      </View>
     </TouchableOpacity>
   );
 
@@ -305,6 +308,17 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </ScrollView>
 
+        {selectedCategory !== 'All' && (
+          <View style={{ flex: 1, padding: 16 }}>
+            <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 16 }}>Decks in {selectedCategory}</Text>
+            <FlatList
+              data={decks}
+              renderItem={renderItem}
+              keyExtractor={(item) => item.id}
+            />
+          </View>
+        )}
+
         {selectedCategory === 'All' && (
           <View style={{ flex: 1, padding: 16 }}>
             <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 16 }}>Your Decks</Text>
@@ -492,12 +506,34 @@ const styles = StyleSheet.create({
     marginHorizontal: 25,
   },
   deck: {
-    backgroundColor: '#D9D9D9',
-    marginHorizontal: 25,
+    borderColor: '#D9D9D9',
+    borderWidth: 2,
     marginBottom: 10,
     width: '100%',
     height: 190,
     borderRadius: 15,
+  },
+  deckCategory: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    paddingLeft: 10,
+    paddingTop: 10,
+  },
+  horizontalLine: {
+    borderBottomColor: '#9F9F9F',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    marginHorizontal: 10,
+    marginTop: 10,
+    marginBottom: -30,
+  },
+  deckNameContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deckName: {
+    fontSize: 25,
+    fontWeight: 'bold',
   },
   deleteButton: {
     borderWidth: 1,
@@ -559,7 +595,6 @@ const styles = StyleSheet.create({
     left: '50%',
     transform: [{ translateX: -35 }], 
   },
-  
   plusButtonText: {
     fontSize: 20,
     fontWeight: 'bold',
