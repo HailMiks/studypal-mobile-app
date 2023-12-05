@@ -117,7 +117,7 @@ export default function DeckCreationScreen() {
           const db = getFirestore();
   
           // Reference to the 'decks' collection within the selected category
-          const categoryDecksCollectionRef = doc(db, `users/${uid}/categories/${selectedCategory}/decks`);
+          const categoryDecksCollectionRef = doc(db, `users/${uid}/categories/${selectedCategory}`, 'decks');
   
           // Data for the new deck
           const deckData = {
@@ -234,6 +234,7 @@ export default function DeckCreationScreen() {
                       setSelectedCategory(itemValue);
                     }}
                     // Add this line to prevent resetting to the default value
+                    prompt="Select a category"
                   >
                     {categories.map((category, index) => (
                       <Picker.Item key={index} label={category} value={category} />

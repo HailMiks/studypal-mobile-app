@@ -274,10 +274,12 @@ export default function HomeScreen() {
     }
   };
   
-
   const navigateToDeckCreation = () => {
+    setModalVisible(false);
     navigation.navigate('DeckCreation');
   };
+
+  console.log('Modal State:', isModalVisible);
 
   return (
     <DrawerLayoutAndroid
@@ -390,7 +392,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginTop: 50,
+    marginTop: 30,
     paddingHorizontal: 18.5,
   },
   circleContainer: {
