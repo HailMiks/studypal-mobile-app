@@ -15,7 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { signOut } from 'firebase/auth';
 import { auth } from '../config/firebase';
-import { getFirestore, query, where, doc, getDoc, getDocs, addDoc, updateDoc, arrayUnion, arrayRemove, collection } from 'firebase/firestore';
+import { getFirestore, query, where, doc, getDoc, getDocs, updateDoc, arrayUnion, arrayRemove, collection } from 'firebase/firestore';
 import FontAwesomeIcon from 'react-native-vector-icons/FontAwesome';
 import { useNavigation } from '@react-navigation/native';
 
@@ -32,22 +32,23 @@ export default function HomeScreen() {
   useEffect(() => {
     const fetchUserData = async () => {
       const currentUser = auth.currentUser;
-  
+
       if (currentUser) {
         const uid = currentUser.uid;
         const db = getFirestore();
         const userDocRef = doc(db, 'users', uid);
-  
+
         try {
           const userDocSnap = await getDoc(userDocRef);
-  
+
           if (userDocSnap.exists()) {
             const userData = userDocSnap.data();
             setUserData(userData);
-  
+
             // Set categories from Firestore
-            const userCategories = userData.categories || ['All'];
-            setCategories(['All', ...userCategories]);
+            if (userData.categories) {
+              setCategories(['All', ...userData.categories]);
+            }
           } else {
             console.log('User document does not exist.');
           }
@@ -56,50 +57,59 @@ export default function HomeScreen() {
         }
       }
     };
-  
+
     fetchUserData();
   }, []);
 
   useEffect(() => {
     const fetchDecks = async () => {
       const currentUser = auth.currentUser;
-  
+
       if (currentUser) {
         const uid = currentUser.uid;
         const db = getFirestore();
-        const userCategoriesCollectionRef = collection(db, 'users', uid, 'Categories');
-        const categoryDocRef = doc(userCategoriesCollectionRef, selectedCategory);
-        const decksCollectionRef = collection(categoryDocRef, 'decks');
-  
+        const userDecksCollectionRef = collection(db, 'users', uid, 'decks');
+
         try {
-          const querySnapshot = await getDocs(decksCollectionRef);
-  
+          let decksQuery;
+
+          // Filter by category if it's not 'All'
+          if (selectedCategory !== 'All') {
+            decksQuery = query(userDecksCollectionRef, where('category', '==', selectedCategory));
+          } else {
+            decksQuery = userDecksCollectionRef;
+          }
+
+          const querySnapshot = await getDocs(decksQuery);
+
           const userDecks = querySnapshot.docs.map((doc) => ({
             id: doc.id,
             ...doc.data(),
           }));
-  
+
           setDecks(userDecks);
-          console.log('Fetched decks:', userDecks);
         } catch (error) {
           console.error('Error fetching user decks:', error.message);
         }
       }
     };
-  
-    console.log('Fetching decks for category:', selectedCategory);
+
     fetchDecks();
   }, [selectedCategory]);
 
   const renderItem = ({ item }) => (
     <TouchableOpacity
       onPress={() => navigation.navigate('DeckDetails', { deckId: item.id })}
-      style={{ padding: 16, borderBottomWidth: 1, borderBottomColor: '#ccc' }}
+      style={styles.deck}
     >
-      <Text>Deck Name: {item.deckName}</Text>
-      <Text>Category: {item.category}</Text>
+      <Text style={styles.deckCategory}>{item.category}</Text>
+      <View style={styles.horizontalLine}/>
+      <View style={styles.deckNameContainer}>
+        <Text style={styles.deckName}>{item.deckName}</Text>
+      </View>
     </TouchableOpacity>
   );
+
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -165,7 +175,7 @@ export default function HomeScreen() {
     return categories.map((category, index) => (
       <TouchableOpacity
         key={index}
-        onPress={() => handleCategorySelection(category)}
+        onPress={() => setSelectedCategory(category)}
         onLongPress={() => deleteCategoryConfirmation(category)}
       >
         <View style={styles.categoryButtonContainer}>
@@ -173,30 +183,17 @@ export default function HomeScreen() {
             style={[
               styles.categoryButton,
               {
-                backgroundColor: selectedCategory === category ? '#D9D9D9' : 'white',
-                borderColor: selectedCategory === category ? '#D9D9D9' : '#9F9F9F',
+                backgroundColor:
+                  selectedCategory === category ? '#D9D9D9' : 'white',
+                color: selectedCategory === category ? 'white' : 'black',
               },
             ]}
           >
-            <Text
-              style={[
-                styles.categoryButtonText,
-                {
-                  color: selectedCategory === category ? 'white' : 'black',
-                },
-              ]}
-            >
-              {category}
-            </Text>
+            <Text style={styles.categoryButtonText}>{category}</Text>
           </View>
         </View>
       </TouchableOpacity>
     ));
-  };
-  
-  const handleCategorySelection = (category) => {
-    console.log('Selected Category:', category);
-    setSelectedCategory(category);
   };
 
   const deleteCategoryConfirmation = (categoryToDelete) => {
@@ -225,7 +222,6 @@ export default function HomeScreen() {
       const userDocRef = doc(db, 'users', uid);
   
       try {
-        // Update the user's document to add the new category
         await updateDoc(userDocRef, {
           categories: arrayUnion(newCategory),
         });
@@ -233,7 +229,7 @@ export default function HomeScreen() {
         // Update local state
         setCategories((prevCategories) => {
           // Check if 'All' is already in the categories list
-          const categoriesWithoutAll = prevCategories.filter((cat) => cat !== 'All');
+          const categoriesWithoutAll = prevCategories.filter(cat => cat !== 'All');
   
           return ['All', ...categoriesWithoutAll, newCategory];
         });
@@ -245,7 +241,7 @@ export default function HomeScreen() {
       }
     }
   };
-  
+
   const deleteCategory = async (categoryToDelete) => {
     if (categoryToDelete !== 'All') {
       // Update categories in Firestore
@@ -255,7 +251,6 @@ export default function HomeScreen() {
       const userDocRef = doc(db, 'users', uid);
   
       try {
-        // Update the user's document to remove the category
         await updateDoc(userDocRef, {
           categories: arrayRemove(categoryToDelete),
         });
@@ -270,16 +265,13 @@ export default function HomeScreen() {
     } else {
       // Handle the case where the user tries to delete the "All" category
       Alert.alert("Cannot delete this category.");
-      console.warn("Cannot delete 'All' category.");
+      console.warn();("Cannot delete 'All' category.");
     }
   };
-  
+
   const navigateToDeckCreation = () => {
-    setModalVisible(false);
     navigation.navigate('DeckCreation');
   };
-
-  console.log('Modal State:', isModalVisible);
 
   return (
     <DrawerLayoutAndroid
@@ -316,6 +308,17 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </ScrollView>
 
+        {selectedCategory !== 'All' && (
+          <View style={{ flex: 1, padding: 16 }}>
+            <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 16 }}>Decks in {selectedCategory}</Text>
+            <FlatList
+              data={decks}
+              renderItem={renderItem}
+              keyExtractor={(item) => item.id}
+            />
+          </View>
+        )}
+
         {selectedCategory === 'All' && (
           <View style={{ flex: 1, padding: 16 }}>
             <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 16 }}>Your Decks</Text>
@@ -326,18 +329,6 @@ export default function HomeScreen() {
             />
           </View>
         )}
-
-        {selectedCategory !== 'All' && (
-          <View style={{ flex: 1, padding: 16 }}>
-            <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 16 }}>{`Decks in ${selectedCategory}`}</Text>
-            <FlatList
-              data={decks.filter((deck) => deck.category === selectedCategory)}
-              renderItem={renderItem}
-              keyExtractor={(item) => item.id}
-            />
-          </View>
-        )}
-
 
         {/* Modal for adding new category */}
         <Modal
@@ -392,7 +383,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginTop: 30,
+    marginTop: 50,
     paddingHorizontal: 18.5,
   },
   circleContainer: {
@@ -515,12 +506,34 @@ const styles = StyleSheet.create({
     marginHorizontal: 25,
   },
   deck: {
-    backgroundColor: '#D9D9D9',
-    marginHorizontal: 25,
+    borderColor: '#D9D9D9',
+    borderWidth: 2,
     marginBottom: 10,
     width: '100%',
     height: 190,
     borderRadius: 15,
+  },
+  deckCategory: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    paddingLeft: 10,
+    paddingTop: 10,
+  },
+  horizontalLine: {
+    borderBottomColor: '#9F9F9F',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    marginHorizontal: 10,
+    marginTop: 10,
+    marginBottom: -30,
+  },
+  deckNameContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deckName: {
+    fontSize: 25,
+    fontWeight: 'bold',
   },
   deleteButton: {
     borderWidth: 1,
@@ -582,7 +595,6 @@ const styles = StyleSheet.create({
     left: '50%',
     transform: [{ translateX: -35 }], 
   },
-  
   plusButtonText: {
     fontSize: 20,
     fontWeight: 'bold',
