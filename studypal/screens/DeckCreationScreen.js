@@ -32,48 +32,49 @@ export default function DeckCreationScreen() {
   useEffect(() => {
     const fetchUserData = async () => {
       const currentUser = auth.currentUser;
-  
+
       if (currentUser) {
         const uid = currentUser.uid;
         const db = getFirestore();
         const userDocRef = doc(db, 'users', uid);
-  
+
         try {
           const userDocSnap = await getDoc(userDocRef);
-  
+
           if (userDocSnap.exists()) {
             try {
               await updateDoc(userDocRef, {
                 categories: arrayUnion(),
               });
-  
+
               // Set categories from Firestore
               const updatedUserDocSnap = await getDoc(userDocRef);
               const updatedUserData = updatedUserDocSnap.data();
-  
+
               if (updatedUserData.categories) {
                 setCategories(['Select a category', ...updatedUserData.categories]);
-                // Don't set the selected category here
+                setSelectedCategory(''); // Set the default selected category
               }
             } catch (error) {
               console.error('Error updating categories:', error.message);
             }
           } else {
+
             // Set categories from Firestore after creating the document
             const newUserDocSnap = await getDoc(userDocRef);
             const newUserCategories = newUserDocSnap.data().categories;
-  
+
             setCategories(['Select a category', ...newUserCategories]);
-            // Don't set the selected category here
+            setSelectedCategory(''); // Set the default selected category
           }
         } catch (error) {
           console.error('Error fetching user document:', error.message);
         }
       }
     };
-  
+
     fetchUserData();
-  }, []);
+  },);
 
   const addNewSection = () => {
     setSections((prevSections) => [
@@ -117,7 +118,7 @@ export default function DeckCreationScreen() {
           const db = getFirestore();
   
           // Reference to the 'decks' collection within the selected category
-          const categoryDecksCollectionRef = doc(db, `users/${uid}/categories/${selectedCategory}/decks`);
+          const categoryDecksCollectionRef = doc(db, `users/${uid}/categories/${selectedCategory}`, 'decks');
   
           // Data for the new deck
           const deckData = {
@@ -234,6 +235,7 @@ export default function DeckCreationScreen() {
                       setSelectedCategory(itemValue);
                     }}
                     // Add this line to prevent resetting to the default value
+                    prompt="Select a category"
                   >
                     {categories.map((category, index) => (
                       <Picker.Item key={index} label={category} value={category} />
