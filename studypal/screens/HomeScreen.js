@@ -295,7 +295,6 @@ export default function HomeScreen() {
         console.error('Error deleting category:', error.message);
       }
     } else {
-      // Handle the case where the user tries to delete the "All" category
       Alert.alert("Cannot delete this category.");
       console.warn();("Cannot delete 'All' category.");
     }
@@ -308,7 +307,7 @@ export default function HomeScreen() {
   return (
     <DrawerLayoutAndroid
       ref={drawerRef}
-      drawerWidth={255} // Adjust this value to make the drawer wider
+      drawerWidth={255} 
       drawerPosition={'right'}
       renderNavigationView={() => navigationView}
     >

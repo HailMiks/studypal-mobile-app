@@ -1,8 +1,7 @@
-// FieldScreen.js
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { getFirestore, collection, doc, getDoc } from 'firebase/firestore'; // Update with your actual imports
-import { auth } from '../config/firebase'; // Update with your actual import for the firebase auth object
+import { getFirestore, collection, doc, getDoc } from 'firebase/firestore'; 
+import { auth } from '../config/firebase'; 
 
 const FieldScreen = ({ route, navigation }) => {
   const { deckId } = route.params;

@@ -75,8 +75,6 @@ export default function DeckCreationScreen() {
   
     fetchUserData();
   }, []);
-  
-  
 
   const addNewSection = () => {
     setSections((prevSections) => [
@@ -135,14 +133,10 @@ export default function DeckCreationScreen() {
             })),
           };
   
-          // Add the deck to the 'decks' collection within the user's document
           const docRef = await addDoc(userDecksCollection, deckData);
   
           console.log('Deck successfully created with ID:', docRef.id);
-  
-          // Optionally, you can update other collections or documents based on your requirements.
-  
-          // Navigate to the HomeScreen
+
           navigation.navigate('Home');
         } else {
           console.log('User not authenticated.');

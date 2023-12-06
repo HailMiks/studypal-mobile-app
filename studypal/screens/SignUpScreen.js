@@ -6,7 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { getFirestore } from 'firebase/firestore';
-import { collection, addDoc, setDoc, doc } from 'firebase/firestore';
+import { collection, setDoc, doc } from 'firebase/firestore';
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
@@ -28,11 +28,10 @@ export default function SignUpScreen() {
   
         const uid = user.uid;
   
-        const docRef = doc(usersCollection, uid); // Set the document ID to be the UID
+        const docRef = doc(usersCollection, uid); 
         await setDoc(docRef, {
           userName: userName,
           email: email,
-          // Add any other fields you want to store
         });
   
         console.log('Document written with ID: ', uid);
