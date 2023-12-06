@@ -14,12 +14,24 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { ArrowLeftIcon } from 'react-native-heroicons/solid';
 import { auth } from '../config/firebase';
-import { getFirestore, doc, getDoc, updateDoc, arrayUnion, addDoc } from 'firebase/firestore';
+import { getFirestore, collection, getDoc, doc, addDoc, setUserData } from 'firebase/firestore';
 import FontAwesomeIcon from 'react-native-vector-icons/FontAwesome';
 import { Picker } from '@react-native-picker/picker';
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
+
+const ContentSection = ({ title, placeholder, value, onChangeText }) => (
+  <View style={styles.section}>
+    <Text style={styles.sectionTitle}>{title}</Text>
+    <TextInput
+      style={styles.input}
+      placeholder={placeholder}
+      value={value}
+      onChangeText={onChangeText}
+    />
+  </View>
+);
 
 export default function DeckCreationScreen() {
   const navigation = useNavigation();
@@ -28,53 +40,43 @@ export default function DeckCreationScreen() {
   const [deckName, setDeckName] = useState('');
   const [sections, setSections] = useState([{ id: 1, questions: '', answer: '' }]);
   const [currentIndex, setCurrentIndex] = useState(0);
-
+  const [userDataState, setUserDataState] = useState({});
+  
   useEffect(() => {
     const fetchUserData = async () => {
       const currentUser = auth.currentUser;
-
+  
       if (currentUser) {
         const uid = currentUser.uid;
         const db = getFirestore();
         const userDocRef = doc(db, 'users', uid);
-
+  
         try {
           const userDocSnap = await getDoc(userDocRef);
-
+  
           if (userDocSnap.exists()) {
-            try {
-              await updateDoc(userDocRef, {
-                categories: arrayUnion(),
-              });
-
-              // Set categories from Firestore
-              const updatedUserDocSnap = await getDoc(userDocRef);
-              const updatedUserData = updatedUserDocSnap.data();
-
-              if (updatedUserData.categories) {
-                setCategories(['Select a category', ...updatedUserData.categories]);
-                setSelectedCategory(''); // Set the default selected category
-              }
-            } catch (error) {
-              console.error('Error updating categories:', error.message);
+            const userData = userDocSnap.data();
+            setUserDataState(userData);
+  
+            // Set categories from Firestore
+            if (userData.categories) {
+              // Add 'Select a category' as the first option
+              setCategories(['Select a category', ...userData.categories]);
+              setSelectedCategory(''); // Set the default selected category
             }
           } else {
-
-            // Set categories from Firestore after creating the document
-            const newUserDocSnap = await getDoc(userDocRef);
-            const newUserCategories = newUserDocSnap.data().categories;
-
-            setCategories(['Select a category', ...newUserCategories]);
-            setSelectedCategory(''); // Set the default selected category
+            console.log('User document does not exist.');
           }
         } catch (error) {
-          console.error('Error fetching user document:', error.message);
+          console.error('Error fetching user data:', error.message);
         }
       }
     };
-
+  
     fetchUserData();
-  },);
+  }, []);
+  
+  
 
   const addNewSection = () => {
     setSections((prevSections) => [
@@ -116,9 +118,12 @@ export default function DeckCreationScreen() {
         if (currentUser) {
           const uid = currentUser.uid;
           const db = getFirestore();
+          
+          // Reference to the user's document
+          const userDocRef = doc(db, 'users', uid);
   
-          // Reference to the 'decks' collection within the selected category
-          const categoryDecksCollectionRef = doc(db, `users/${uid}/categories/${selectedCategory}`, 'decks');
+          // Reference to the 'decks' collection within the user's document
+          const userDecksCollection = collection(userDocRef, 'decks');
   
           // Data for the new deck
           const deckData = {
@@ -130,10 +135,12 @@ export default function DeckCreationScreen() {
             })),
           };
   
-          // Add the deck to the 'decks' collection within the selected category
-          const docRef = await addDoc(categoryDecksCollectionRef, deckData);
+          // Add the deck to the 'decks' collection within the user's document
+          const docRef = await addDoc(userDecksCollection, deckData);
   
           console.log('Deck successfully created with ID:', docRef.id);
+  
+          // Optionally, you can update other collections or documents based on your requirements.
   
           // Navigate to the HomeScreen
           navigation.navigate('Home');
@@ -148,124 +155,122 @@ export default function DeckCreationScreen() {
     }
   };
 
-  return (
-    <KeyboardAvoidingView style={{ flex: 1 }}>
-      <SafeAreaView style={{ flex: 1 }}>
-        <ScrollView>
-          <View style={styles.backButtonContainer}>
-            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-              <ArrowLeftIcon size={20} color="black" />
-            </TouchableOpacity>
-          </View>
-          <View style={styles.imageContainer}>
-            <Image
-              source={require('../assets/images/signup-flash.jpg')}
-              style={styles.image}
-            />
-          </View>
-          <View style={styles.formContainer}>
-            <View style={styles.form}>
-              <Text style={styles.textStyle}>Add Deck</Text>
-              <Text style={styles.label}>Name your Deck</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter Deck Name"
-                value={deckName}
-                onChangeText={(value) => setDeckName(value)}
-              />
-              <View
-                style={styles.horizontalLine}
-              />
-              <View style={styles.flashcardsHeader}>
-                <View>
-                  <Text style={styles.textStyle}>Flash Cards</Text>
-                  <Text style={{ color: '#BDBDBD' }}>Write your QnA</Text>
-                </View>
-                <View style={styles.navigationButtons}>
-                  <TouchableOpacity onPress={navigateToPreviousSection} style={styles.navigationButton}>
-                    <FontAwesomeIcon name="chevron-left" style={styles.icon} />
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={navigateToNextSection} style={styles.navigationButton}>
-                    <FontAwesomeIcon name="chevron-right" style={styles.icon} />
-                  </TouchableOpacity>
-                </View>
-              </View>
-              {sections.map((section, index) => (
-                index === currentIndex && (
-                  <View key={section.id} style={styles.sectionContainer}>
-                    <Text style={styles.labelFlash}>Question</Text>
-                    <View style={styles.inputContainer}>
-                      <TextInput
-                        style={[styles.inputFlash, { height: 100 }]}
-                        multiline={true}
-                        placeholder="Enter Question"
-                        value={section.questions}
-                        onChangeText={(value) => handleInputChange(value, 'questions')}
-                      />
-                    </View>
-                    <Text style={styles.labelFlash}>Answer</Text>
-                    <View style={styles.inputContainerFlash}>
-                      <TextInput
-                        style={styles.inputFlash}
-                        placeholder="Enter Answer"
-                        value={section.answer}
-                        onChangeText={(value) => handleInputChange(value, 'answer')}
-                      />
-                    </View>
-                  </View>
-                )
-              ))}
-              <View style={styles.addAndRemoveButtons}>
-                <TouchableOpacity onPress={deleteCurrentSection} style={styles.deleteCardButton}>
-                  <Text style={styles.deleteCardButtonText}>Delete</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.newCardButton} onPress={addNewSection}>
-                  <Text style={styles.newCardButtonText}>Add</Text>
-                </TouchableOpacity>
-              </View>
-              <View>
-                <Text style={styles.textStyle}>Category</Text>
-                <Text style={styles.label}>Add deck within:</Text>
-
-                <View style={styles.pickerContainer}>
-                  <Picker
-                    selectedValue={selectedCategory}
-                    onValueChange={(itemValue) => {
-                      console.log('Selected Category:', itemValue);
-                      setSelectedCategory(itemValue);
-                    }}
-                    // Add this line to prevent resetting to the default value
-                    prompt="Select a category"
-                  >
-                    {categories.map((category, index) => (
-                      <Picker.Item key={index} label={category} value={category} />
-                    ))}
-                  </Picker>
-                </View>
-              </View>
-              <View style={styles.buttonsDeckCreate}>
-                <TouchableOpacity style={styles.cancelCreateDeckButton} onPress={() => navigation.goBack()}>
-                  <Text style={styles.cancelCreateDeckButtonText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.createDeckButton} onPress={handleSubmit}>
-                  <Text style={styles.createDeckButtonText}>Create</Text>
-                </TouchableOpacity>
-              </View>
+return (
+  <KeyboardAvoidingView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1 }}>
+      <ScrollView>
+      <View style={styles.backButtonContainer}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <ArrowLeftIcon size={20} color="black" />
+        </TouchableOpacity>
+        </View>
+      <View style={styles.imageContainer}>
+        <Image
+          source={require('../assets/images/signup-flash.jpg')}
+          style={styles.image}
+        />
+      </View>
+      <View style={styles.formContainer}>
+        <View style={styles.form}>
+          <Text style={styles.textStyle}>Add Deck</Text>
+          <Text style={styles.label}>Name your Deck</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter Deck Name"
+            value={deckName}
+            onChangeText={(value) => setDeckName(value)}
+          />
+          <View
+            style={styles.horizontalLine}
+          />
+          <View style={styles.flashcardsHeader}>
+            <View>
+              <Text style={styles.textStyle}>Flash Cards</Text>
+              <Text style={{ color: '#BDBDBD' }}>Write your QnA</Text>
+            </View>
+            <View style={styles.navigationButtons}>
+              <TouchableOpacity onPress={navigateToPreviousSection} style={styles.navigationButton}>
+                <FontAwesomeIcon name="chevron-left" style={styles.icon} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={navigateToNextSection} style={styles.navigationButton}>
+              <FontAwesomeIcon name="chevron-right" style={styles.icon} />
+              </TouchableOpacity>
             </View>
           </View>
-        </ScrollView>
-      </SafeAreaView>
-    </KeyboardAvoidingView>
+          {sections.map((section, index) => (
+            index === currentIndex && (
+              <View key={section.id} style={styles.sectionContainer}>
+                <Text style={styles.labelFlash}>Question</Text>
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    style={[styles.inputFlash, { height: 100 }]}
+                    multiline={true}
+                    placeholder="Enter Question"
+                    value={section.questions}
+                    onChangeText={(value) => handleInputChange(value, 'questions')}
+                  />
+                </View>
+                <Text style={styles.labelFlash}>Answer</Text>
+                <View style={styles.inputContainerFlash}>
+                  <TextInput
+                    style={styles.inputFlash}
+                    placeholder="Enter Answer"
+                    value={section.answer}
+                    onChangeText={(value) => handleInputChange(value, 'answer')}
+                  />
+                </View>
+              </View>
+            )
+          ))}
+                    <View style={styles.addAndRemoveButtons}>
+            <TouchableOpacity onPress={deleteCurrentSection} style={styles.deleteCardButton}>
+              <Text style={styles.deleteCardButtonText}>Delete</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.newCardButton} onPress={addNewSection}>
+              <Text style={styles.newCardButtonText}>Add</Text>
+            </TouchableOpacity>   
+          </View>
+          <View>
+            <Text style={styles.textStyle}>Category</Text>
+            <Text style={styles.label}>Add deck within:</Text>
+
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={selectedCategory}
+                onValueChange={(itemValue) => {
+                  console.log('Selected Category:', itemValue);
+                  setSelectedCategory(itemValue);
+                }}
+              >
+                {categories.map((category, index) => (
+                  <Picker.Item key={index} label={category} value={category} />
+                ))}
+              </Picker>
+            </View>
+          </View>
+          <View style={styles.buttonsDeckCreate}>
+          <TouchableOpacity style={styles.cancelCreateDeckButton} onPress={() => navigation.goBack()}>
+            <Text style={styles.cancelCreateDeckButtonText}>Cancel</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.createDeckButton} onPress={handleSubmit}>
+            <Text style={styles.createDeckButtonText}>Create</Text>
+          </TouchableOpacity>
+          </View>
+      </View>
+    </View>
+    </ScrollView>
+    </SafeAreaView>
+  </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  backButtonContainer: {
-    position: 'absolute',
-    top: 50,
-    left: 10,
-    zIndex: 1,
-  },
+    backButtonContainer: {
+      position: 'absolute',
+      top: 50,
+      left: 10,
+      zIndex: 1,
+    },
     backButton: {
       backgroundColor: 'white',
       padding: 10,
@@ -299,8 +304,8 @@ const styles = StyleSheet.create({
       marginHorizontal: 25,
     },
     textStyle: {
-        fontSize: 25,
-        fontWeight: 'bold',
+      fontSize: 25,
+      fontWeight: 'bold',
     },
     label: {
       color: '#BDBDBD',
@@ -338,10 +343,10 @@ const styles = StyleSheet.create({
       fontSize: 12,
     },
     horizontalLine: {
-        borderBottomColor: '#9F9F9F',
-        borderBottomWidth: StyleSheet.hairlineWidth,
-        marginTop: -10,
-        marginBottom: 20,
+      borderBottomColor: '#9F9F9F',
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      marginTop: -10,
+      marginBottom: 20,
     },
     sectionContainer: {
       borderWidth: 1,

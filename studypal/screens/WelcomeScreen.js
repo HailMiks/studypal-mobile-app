@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
   title: {
     color: 'black',
     fontWeight: 'bold',
-    fontSize: 35,
+    fontSize: 25,
     textAlign: 'center',
   },
   imageContainer: {
@@ -109,7 +109,5 @@ const styles = StyleSheet.create({
     color: '#00a8e8',
   },
 });
-
-
 
 export default WelcomeScreen;

@@ -15,7 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { signOut } from 'firebase/auth';
 import { auth } from '../config/firebase';
-import { getFirestore, query, where, doc, getDoc, getDocs, updateDoc, arrayUnion, arrayRemove, collection } from 'firebase/firestore';
+import { getFirestore, query, where, doc, getDoc, getDocs, deleteDoc, updateDoc, arrayUnion, arrayRemove, collection } from 'firebase/firestore';
 import FontAwesomeIcon from 'react-native-vector-icons/FontAwesome';
 import { useNavigation } from '@react-navigation/native';
 
@@ -99,16 +99,48 @@ export default function HomeScreen() {
 
   const renderItem = ({ item }) => (
     <TouchableOpacity
-      onPress={() => navigation.navigate('DeckDetails', { deckId: item.id })}
+      onLongPress={() => deleteDeckConfirmation(item)}
+      onPress={() => navigation.navigate('FieldScreen', { deckId: item.id })}
       style={styles.deck}
     >
       <Text style={styles.deckCategory}>{item.category}</Text>
-      <View style={styles.horizontalLine}/>
+      <View style={styles.horizontalLine} />
       <View style={styles.deckNameContainer}>
         <Text style={styles.deckName}>{item.deckName}</Text>
       </View>
     </TouchableOpacity>
   );
+
+  const deleteDeckConfirmation = (deckToDelete) => {
+    Alert.alert(
+      'Delete Deck',
+      `Are you sure you want to delete the deck '${deckToDelete.deckName}'?`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          onPress: () => deleteDeck(deckToDelete),
+        },
+      ]
+    );
+  };
+
+  const deleteDeck = async (deckToDelete) => {
+    const currentUser = auth.currentUser;
+    const uid = currentUser.uid;
+    const db = getFirestore();
+    const deckDocRef = doc(db, 'users', uid, 'decks', deckToDelete.id);
+  
+    try {
+      await deleteDoc(deckDocRef);
+      setDecks((prevDecks) => prevDecks.filter((deck) => deck.id !== deckToDelete.id));
+    } catch (error) {
+      console.error('Error deleting deck:', error.message);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -383,7 +415,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginTop: 50,
+    marginTop: 30,
     paddingHorizontal: 18.5,
   },
   circleContainer: {

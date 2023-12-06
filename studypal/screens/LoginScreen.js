@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
     marginRight: -30,
   },
   formContainer: {
-    flex: 2,
+    flex: 5,
     backgroundColor: 'white',
     paddingHorizontal: 8,
     paddingTop: 8,

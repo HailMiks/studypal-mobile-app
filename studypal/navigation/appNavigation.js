@@ -6,6 +6,7 @@ import WelcomeScreen from '../screens/WelcomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import SignUpScreen from '../screens/SignUpScreen';
 import DeckCreationScreen from '../screens/DeckCreationScreen';
+import FieldScreen from '../screens/FieldScreen.js';
 import useAuth from '../hooks/useAuth.js';
 
 const Stack = createNativeStackNavigator();
@@ -19,6 +20,7 @@ export default function AppNavigation() {
           <Stack.Navigator initialRouteName='Home'>
             <Stack.Screen name="Home" options={{headerShown: false}} component={HomeScreen} />
             <Stack.Screen name="DeckCreation" options={{ headerShown: false }} component={DeckCreationScreen} />
+            <Stack.Screen name="FieldScreen" component={FieldScreen} />
           </Stack.Navigator>
         </NavigationContainer>
       )
