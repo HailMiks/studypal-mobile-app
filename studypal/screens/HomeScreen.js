@@ -361,7 +361,6 @@ export default function HomeScreen() {
           </View>
         )}
 
-        {/* Modal for adding new category */}
         <Modal
           animationType="fade"
           transparent={true}
